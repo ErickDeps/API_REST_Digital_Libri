@@ -11,6 +11,22 @@ class Router
         $this->routes = $routes;
     }
 
+    /**
+     * Ejecuta la ruta correspondiente según la URI y el método HTTP.
+     *
+     * Analiza la URI de la petición, compara con las rutas registradas y ejecuta
+     * el controlador y la acción correspondiente. Maneja middlewares de autenticación,
+     * roles y autenticación opcional (soft auth). Si la ruta requiere middleware,
+     * se ejecuta antes de invocar el controlador.
+     *
+     * @param string $uri    La URI de la petición (por ejemplo, "/login").
+     * @param string $method El método HTTP de la petición (GET, POST, PUT, DELETE, etc.).
+     *
+     * @return mixed Devuelve lo que retorne la acción del controlador si la ruta coincide.
+     *               En caso de que no se encuentre la ruta, retorna una respuesta JSON con error 404.
+     *
+     * @throws \Exception Puede lanzar excepciones si algún middleware falla o si hay errores en el controlador.
+     */
     public function dispatch(string $uri, string $method)
     {
         $basePath = $_ENV['APP_BASE_PATH'];
@@ -34,14 +50,14 @@ class Router
 
             if (strtoupper($method) !== $httpMethod) continue;
 
-            $pattern = preg_replace('#\{[\w]+\}#', '([\w-]+)', $route); // Convertimos la cadena a reemplazar en grupo de captura.
-            $pattern = "#^$pattern$#"; // La URI se convierte en una expresion regular completa: #^$/users/([\w-]+)$#
+            $pattern = preg_replace('#\{[\w]+\}#', '([\w-]+)', $route);
+            $pattern = "#^$pattern$#";
 
-            if (preg_match($pattern, $uri, $matches)) { //Busca coincidencias y las guarda en matches
-                array_shift($matches); // Remueve la coincidencia inicial [0] y solo deja las coincidencias encontradas en la expresion regular $pattern.
+            if (preg_match($pattern, $uri, $matches)) {
+                array_shift($matches);
 
                 foreach ($matches as $k => $v) {
-                    if (is_numeric($v)) $matches[$k] = (int) $v; // Si la coinciencia es numerica, la convierte a int
+                    if (is_numeric($v)) $matches[$k] = (int) $v;
                 }
 
                 $userPayload = null;
